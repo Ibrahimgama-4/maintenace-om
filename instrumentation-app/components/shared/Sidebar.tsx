@@ -22,6 +22,7 @@ import {
   UserCircle,
   Megaphone,
   CalendarDays,
+  Library,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { InstallAppButton } from "./InstallAppButton";
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { href: "/breakdowns", label: "Breakdowns", icon: Wrench },
   { href: "/handover", label: "Shift Handover", icon: Repeat },
   { href: "/shift-roster", label: "Shift Roster", icon: CalendarDays },
+  { href: "/documents", label: "Machine Documents", icon: Library },
   { href: "/announcements", label: "Announcements", icon: Megaphone },
   { href: "/equipment", label: "Equipment", icon: Cpu },
   { href: "/pm-calibration", label: "PM & Calibration", icon: CalendarCheck },
