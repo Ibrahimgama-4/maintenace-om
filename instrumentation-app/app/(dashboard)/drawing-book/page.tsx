@@ -5,6 +5,7 @@ import { Library, FileText, Eye, Download } from "lucide-react";
 import { PLANT_LOCATIONS } from "@/lib/constants";
 import { getCurrentUserRole, canManage } from "@/lib/utils/role";
 import { DocumentUploadForm } from "./DocumentUploadForm";
+import { DeleteButton } from "@/components/shared/DeleteButton";
 import clsx from "clsx";
 
 export default async function DrawingBookPage({
@@ -84,7 +85,7 @@ export default async function DrawingBookPage({
                     <p className="truncate text-sm font-medium text-gray-900">{d.title}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
-                    <a
+                    
                       href={d.url}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -93,7 +94,7 @@ export default async function DrawingBookPage({
                       <Eye className="h-4 w-4" />
                       View
                     </a>
-                    <a
+                    
                       href={d.url}
                       download
                       className="flex items-center gap-1 text-sm text-brand-600 hover:underline"
@@ -101,6 +102,9 @@ export default async function DrawingBookPage({
                       <Download className="h-4 w-4" />
                       Download
                     </a>
+                    {canManage(role) && (
+                      <DeleteButton table="machine_documents" id={d.id} label="Delete" />
+                    )}
                   </div>
                 </Card>
               ))}
