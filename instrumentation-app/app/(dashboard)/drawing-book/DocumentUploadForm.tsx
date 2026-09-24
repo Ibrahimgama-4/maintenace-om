@@ -29,7 +29,8 @@ export function DocumentUploadForm({ location }: { location: string }) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const path = `${encodeURIComponent(location)}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_")}`;
+    const locationSlug = location.replace(/[^a-zA-Z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    const path = `${locationSlug}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_")}`;
     const { error: uploadError } = await supabase.storage.from("machine-documents").upload(path, file);
 
     if (uploadError) {
