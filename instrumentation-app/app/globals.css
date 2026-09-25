@@ -6,7 +6,7 @@ html {
   /* Bumps the base font size so all of Tailwind's rem-based text
      classes (text-xs, text-sm, text-base, etc.) scale up together,
      without needing to touch every component. */
-  font-size: 24px;
+  font-size: 26px;
 }
 
 body {
