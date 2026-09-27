@@ -30,13 +30,7 @@ export default async function BreakdownsPage({
     query = query.ilike("location", activeLocation.trim());
   }
 
-  const { data: breakdowns, error: queryError } = await query;
-
-  // TEMPORARY DEBUG — remove once the line-filtering issue is confirmed fixed.
-  const debugInfo = activeLocation
-    ? `[debug] filtering for: "${activeLocation}" (length ${activeLocation.length}) — matched ${breakdowns?.length ?? 0} row(s)` +
-      (queryError ? ` — ERROR: ${queryError.message} (code: ${queryError.code})` : "")
-    : null;
+  const { data: breakdowns } = await query;
 
   return (
     <div className="space-y-4">
@@ -55,10 +49,6 @@ export default async function BreakdownsPage({
           </Button>
         </Link>
       </div>
-
-      {debugInfo && (
-        <p className="rounded-md bg-yellow-100 px-3 py-2 text-xs font-mono text-yellow-800">{debugInfo}</p>
-      )}
 
       <div className="flex flex-wrap gap-1.5">
         <Link
