@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PLANT_LOCATIONS } from "@/lib/constants";
+import { equipmentForLine } from "@/lib/utils/lines";
 
 const input = "w-full rounded-md border border-gray-300 px-3 py-2 text-sm";
 const addMonths = (iso: string, m: number) => {
@@ -18,7 +19,7 @@ export default function NewCalibrationPage() {
   const router = useRouter();
   const supabase = createClient();
   const today = new Date().toISOString().slice(0, 10);
-  const [equipment, setEquipment] = useState<{ id: string; tag_number: string; name: string }[]>([]);
+  const [equipment, setEquipment] = useState<{ id: string; tag_number: string; name: string; location: string | null }[]>([]);
   const [f, setF] = useState({
     equipment_id: "",
     equipment_text: "",
@@ -39,10 +40,12 @@ export default function NewCalibrationPage() {
   useEffect(() => {
     supabase
       .from("equipment")
-      .select("id, tag_number, name")
+      .select("id, tag_number, name, location")
       .order("tag_number")
       .then(({ data }) => setEquipment(data ?? []));
   }, [supabase]);
+
+  const lineEquipment = equipmentForLine(equipment, f.location);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -79,11 +82,27 @@ export default function NewCalibrationPage() {
       <h1 className="mb-4 text-xl font-semibold text-gray-900">Add Calibration Record</h1>
       <Card>
         <form onSubmit={submit} className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Production line *
+              <select className={`${input} mt-1`} value={f.location} onChange={(e) => setF((p) => ({ ...p, location: e.target.value, equipment_id: "" }))}>
+                {PLANT_LOCATIONS.map((l) => (
+                  <option key={l}>{l}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium text-gray-700">
+              Date calibrated
+              <input type="date" max={today} className={`${input} mt-1`} value={f.date} onChange={(e) => set("date", e.target.value)} required />
+            </label>
+          </div>
           <label className="block text-sm font-medium text-gray-700">
-            Instrument (select if registered)
+            Instrument on this line (select if registered)
             <select className={`${input} mt-1`} value={f.equipment_id} onChange={(e) => set("equipment_id", e.target.value)}>
-              <option value="">-- Not registered / describe manually below --</option>
-              {equipment.map((e) => (
+              <option value="">
+                {lineEquipment.length > 0 ? "-- Not registered / describe manually below --" : "-- No equipment registered for this line --"}
+              </option>
+              {lineEquipment.map((e) => (
                 <option key={e.id} value={e.id}>
                   {e.tag_number} — {e.name}
                 </option>
@@ -96,20 +115,6 @@ export default function NewCalibrationPage() {
               <input className={`${input} mt-1`} value={f.equipment_text} onChange={(e) => set("equipment_text", e.target.value)} placeholder="e.g. Packer 2 belt scale load cell" />
             </label>
           )}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Location
-              <select className={`${input} mt-1`} value={f.location} onChange={(e) => set("location", e.target.value)}>
-                {PLANT_LOCATIONS.map((l) => (
-                  <option key={l}>{l}</option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm font-medium text-gray-700">
-              Date calibrated
-              <input type="date" max={today} className={`${input} mt-1`} value={f.date} onChange={(e) => set("date", e.target.value)} required />
-            </label>
-          </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <label className="block text-sm font-medium text-gray-700">
               Result
