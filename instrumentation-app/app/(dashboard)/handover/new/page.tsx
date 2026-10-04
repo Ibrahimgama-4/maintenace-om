@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { PLANT_LOCATIONS } from "@/lib/constants";
 
 const FIELDS: { key: string; label: string; placeholder?: string }[] = [
   { key: "outstanding_breakdowns", label: "Outstanding Breakdowns" },
@@ -18,6 +19,8 @@ const FIELDS: { key: string; label: string; placeholder?: string }[] = [
 export default function NewHandoverPage() {
   const router = useRouter();
   const supabase = createClient();
+  const [line, setLine] = useState("");
+  const [personnel, setPersonnel] = useState("");
   const [shiftType, setShiftType] = useState("General");
   const [form, setForm] = useState<Record<string, string>>({
     outstanding_breakdowns: "",
@@ -30,10 +33,22 @@ export default function NewHandoverPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Arriving from a line's filtered list (?line=...) pre-selects that line.
+  useEffect(() => {
+    const l = new URLSearchParams(window.location.search).get("line");
+    if (l && (PLANT_LOCATIONS as readonly string[]).includes(l)) setLine(l);
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (!line) {
+      setError("Choose the production line this handover is for.");
+      setLoading(false);
+      return;
+    }
 
     const {
       data: { user },
@@ -46,6 +61,8 @@ export default function NewHandoverPage() {
     }
 
     const { error } = await supabase.from("shift_handovers").insert({
+      location: line,
+      shift_personnel: personnel.trim() || null,
       shift_type: shiftType,
       ...form,
       handed_over_by: user.id,
@@ -57,7 +74,7 @@ export default function NewHandoverPage() {
       return;
     }
 
-    router.push("/handover");
+    router.push(`/handover?line=${encodeURIComponent(line)}`);
   }
 
   return (
@@ -66,6 +83,24 @@ export default function NewHandoverPage() {
 
       <Card>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Production line *</label>
+            <select
+              required
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              value={line}
+              onChange={(e) => setLine(e.target.value)}
+            >
+              <option value="">-- Select the line this handover is for --</option>
+              {PLANT_LOCATIONS.map((l) => (
+                <option key={l} value={l}>
+                  {l}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-400">Each line has its own shift team and its own handover record.</p>
+          </div>
+
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Shift</label>
             <select
@@ -77,6 +112,17 @@ export default function NewHandoverPage() {
               <option value="Morning">Morning</option>
               <option value="Night">Night</option>
             </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Shift personnel on this line (optional)</label>
+            <textarea
+              rows={2}
+              placeholder="Outgoing: names / SAP numbers.  Incoming: names / SAP numbers."
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              value={personnel}
+              onChange={(e) => setPersonnel(e.target.value)}
+            />
           </div>
 
           {FIELDS.map((f) => (
