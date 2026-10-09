@@ -19,14 +19,19 @@ export const GROUPS: ShiftGroup[] = ["A", "B", "C", "G"];
 export const groupLabel = (g: string) => (g === "G" ? "General" : `Shift ${g}`);
 
 export const DUTY_META: Record<DutyCode, { label: string; cls: string; rgb: [number, number, number] }> = {
-  D: { label: "Morning", cls: "bg-amber-100 text-amber-800", rgb: [253, 230, 138] },
-  N: { label: "Night", cls: "bg-indigo-100 text-indigo-800", rgb: [199, 210, 254] },
+  // Normal duty colours avoid yellow and green, which are reserved for leave and for changed days.
+  D: { label: "Morning", cls: "bg-blue-100 text-blue-800", rgb: [191, 219, 254] },
+  N: { label: "Night", cls: "bg-violet-200 text-violet-900", rgb: [221, 214, 254] },
   O: { label: "Off", cls: "bg-gray-100 text-gray-500", rgb: [229, 231, 235] },
-  G: { label: "General", cls: "bg-emerald-100 text-emerald-800", rgb: [167, 243, 208] },
-  AL: { label: "Annual leave", cls: "bg-sky-100 text-sky-800", rgb: [186, 230, 253] },
-  SL: { label: "Sick leave", cls: "bg-rose-100 text-rose-800", rgb: [254, 205, 211] },
-  CA: { label: "Casual leave", cls: "bg-purple-100 text-purple-800", rgb: [233, 213, 255] },
+  G: { label: "General", cls: "bg-pink-100 text-pink-800", rgb: [252, 231, 243] },
+  // All leave is yellow; the letters tell the types apart.
+  AL: { label: "Annual leave", cls: "bg-yellow-200 text-yellow-900", rgb: [254, 240, 138] },
+  SL: { label: "Sick leave", cls: "bg-yellow-200 text-yellow-900", rgb: [254, 240, 138] },
+  CA: { label: "Casual leave", cls: "bg-yellow-200 text-yellow-900", rgb: [254, 240, 138] },
 };
+/** A day the admin changed (swapped or added duty) is shown green. */
+export const CHANGED_CLS = "bg-green-300 text-green-900";
+export const CHANGED_RGB: [number, number, number] = [134, 239, 172];
 export const DUTY_ORDER: DutyCode[] = ["D", "N", "O", "G", "AL", "SL", "CA"];
 export const LEAVE_CODES: LeaveCode[] = ["AL", "SL", "CA"];
 export const isLeave = (c: string): c is LeaveCode => c === "AL" || c === "SL" || c === "CA";
@@ -47,6 +52,16 @@ export function cyclePosition(cfg: ShiftConfig, group: "A" | "B" | "C", iso: str
 }
 
 export const codeAt = (pos: number): "D" | "N" | "O" => (pos < 3 ? "D" : pos < 6 ? "N" : "O");
+
+/** Colour class for a duty cell: leave = yellow, a day changed by the admin = green, otherwise the normal colour. */
+export function dutyClass(code: DutyCode, changed = false): string {
+  if (isLeave(code)) return DUTY_META[code].cls;
+  return changed ? CHANGED_CLS : DUTY_META[code].cls;
+}
+export function dutyRgb(code: DutyCode, changed = false): [number, number, number] {
+  if (isLeave(code)) return DUTY_META[code].rgb;
+  return changed ? CHANGED_RGB : DUTY_META[code].rgb;
+}
 
 /** "Night, day 2 of 3" */
 export function phaseText(pos: number): string {
